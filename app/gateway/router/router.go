@@ -1,7 +1,10 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	userv1 "gin-micro-shop/api/proto/user/v1"
+	"github.com/gin-gonic/gin"
+)
 
-func RouterInit(gin *gin.Engine) {
-	UserRouter(gin)
+func RouterInit(gin *gin.Engine, userServiceClient userv1.UserServiceClient) {
+	UserRouter(gin, userServiceClient)
 }
