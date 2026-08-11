@@ -13,5 +13,6 @@ func UserRouter(gin *gin.Engine, userServiceClient userv1.UserServiceClient) {
 	userGroup := gin.Group("/user")
 
 	userGroup.GET("/get", userHandler.GetUser)
+	userGroup.POST("/list", userHandler.UserLists)
 
 }

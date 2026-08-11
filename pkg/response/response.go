@@ -27,6 +27,6 @@ func ErrorWithMessage(gin *gin.Context, message string, requestId string) {
 	gin.JSON(500, Error{500, message, requestId})
 }
 
-func ErrorWithCode(gin *gin.Context, code int, requestId string) {
-	gin.JSON(500, Error{code, "error", requestId})
+func ErrorWithCode(gin *gin.Context, code int, requestId, message string) {
+	gin.JSON(500, Error{code, message, requestId})
 }

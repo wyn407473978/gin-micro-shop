@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	pb "gin-micro-shop/api/proto/user/v1"
 	"gin-micro-shop/app/user/internal/grpc_service"
 	"github.com/gin-gonic/gin"
@@ -15,5 +16,6 @@ func main() {
 
 	_ = grpcServer.Serve(listen)
 	engine := gin.Default()
+	fmt.Println("UserService")
 	engine.Run(":18081")
 }
