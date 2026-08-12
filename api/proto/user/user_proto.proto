@@ -28,10 +28,23 @@ message ListUsersResponse {
   string next_page_token = 2;
 }
 
+message CreateUserRequest{
+  string username = 1;
+  int32 age = 2;
+  int32 sex = 3;
+}
+
+message CreateUserResponse{
+  bool success = 1;
+}
+
+
 service UserService {
   // 普通 RPC
   rpc GetUser(GetUserRequest) returns (User);
 
   // 普通 RPC
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
 }

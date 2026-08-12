@@ -20,9 +20,11 @@ func main() {
 	grpcPort := fmt.Sprintf(":%d", userGrpc.Port)
 	fmt.Println("grpc服务端口", grpcPort)
 	listen, _ := net.Listen("tcp", grpcPort)
+
 	userRepository := repository.NewUserRepository(myConfig.Database.GetDB())
 	userService := service.NewUserService(userRepository)
 	grpcUserService := grpc_service.NewGrpcUserService(userService)
+
 	pb.RegisterUserServiceServer(grpcServer, grpcUserService)
 	//采用一个goroutine 来启动 grpc 服务 防止阻塞导致下面的打印信息无法输出
 	if err := grpcServer.Serve(listen); err != nil {
