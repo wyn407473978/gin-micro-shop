@@ -1,0 +1,12 @@
+server:
+  name: user-service
+  port: 8081
+grpc:
+  name: user-service-grpc
+  port: 50001
+database:
+  host: localhost
+  port: 55432
+  username: ai_user
+  password: ai_pass
+  database: micro_shop_user

@@ -2,6 +2,7 @@ package main
 
 import (
 	pb "gin-micro-shop/api/proto/user/v1"
+	"gin-micro-shop/app/gateway/config"
 	"gin-micro-shop/app/gateway/router"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -9,6 +10,8 @@ import (
 import "fmt"
 
 func main() {
+	config.InitConfig()
+	myConfig := config.GetConfig()
 	conn, err := grpc.Dial("localhost:50001", grpc.WithInsecure())
 	if err != nil {
 		fmt.Println(err)
@@ -17,7 +20,10 @@ func main() {
 	client := pb.NewUserServiceClient(conn)
 	engine := gin.Default()
 	router.RouterInit(engine, client)
-	err = engine.Run(":8080")
+	serverPort := myConfig.Server.Port
+	sprintf := fmt.Sprintf(":%d", serverPort)
+	fmt.Printf("server listening at %s\n", sprintf)
+	err = engine.Run(sprintf)
 	if err != nil {
 		fmt.Println(err)
 	}
