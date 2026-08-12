@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	pb "gin-micro-shop/api/proto/user/v1"
+	"gin-micro-shop/app/gateway/response"
 	"gin-micro-shop/app/user/internal/service"
-	"gin-micro-shop/pkg/response"
 	"strconv"
 )
 

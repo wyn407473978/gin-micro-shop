@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	userv1 "gin-micro-shop/api/proto/user/v1"
+	userResponse "gin-micro-shop/app/gateway/response"
 	"gin-micro-shop/pkg/response"
 	"github.com/gin-gonic/gin"
 	"strconv"
@@ -28,7 +29,7 @@ func (h *UserHandler) GetUser(gin *gin.Context) {
 }
 
 func (h *UserHandler) UserLists(gin *gin.Context) {
-	userPageReq := response.UserPageReq{}
+	userPageReq := userResponse.UserPageReq{}
 
 	err := gin.ShouldBindJSON(&userPageReq)
 	if err != nil {
@@ -47,5 +48,26 @@ func (h *UserHandler) UserLists(gin *gin.Context) {
 		return
 	}
 	response.SuccessWithData(gin, users, "requestId")
+}
 
+func (h *UserHandler) CreateUser(gin *gin.Context) {
+	userCreateReq := userResponse.UserCreateReq{}
+
+	err := gin.ShouldBindJSON(&userCreateReq)
+	if err != nil {
+		response.ErrorWithCode(gin, 400, "requestId", "参数绑定失败")
+		fmt.Println("err:", err)
+		return
+	}
+	fmt.Println("userCreateReq:", userCreateReq)
+	createUserResponse, err := h.UserServiceClient.CreateUser(gin.Request.Context(), &userv1.CreateUserRequest{
+		Username: userCreateReq.UserName,
+		Age:      userCreateReq.Age,
+		Sex:      userCreateReq.Sex,
+	})
+	if err != nil {
+		response.ErrorWithCode(gin, 500, "requestId", "远程调用失败")
+		return
+	}
+	response.SuccessWithData(gin, createUserResponse.Success, "requestId")
 }

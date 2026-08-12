@@ -12,6 +12,12 @@ type ProductGrpcService struct {
 	productService *service.ProductService
 }
 
+func NewProductGrpcService(productService *service.ProductService) *ProductGrpcService {
+	return &ProductGrpcService{
+		productService: productService,
+	}
+}
+
 func (s *ProductGrpcService) CreateProduct(ctx context.Context, req *productv1.CreateProductRequest) (*productv1.CreateProductResponse, error) {
 	productServiceReq := &request.CreateProductReq{Name: req.Name, Price: req.Price, Stock: req.Stock}
 	productServiceRes, _ := s.productService.CreateProduct(ctx, productServiceReq)

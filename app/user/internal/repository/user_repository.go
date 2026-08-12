@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
+	"gin-micro-shop/app/gateway/response"
 	"gin-micro-shop/app/user/internal/model"
-	"gin-micro-shop/pkg/response"
 	"gorm.io/gorm"
 )
 

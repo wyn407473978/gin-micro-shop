@@ -12,8 +12,8 @@ type ProductService struct {
 	productRepository repository.ProductRepository
 }
 
-func NewProductService(productRepository repository.ProductRepository) *ProductService {
-	return &ProductService{productRepository: productRepository}
+func NewProductService(productRepository *repository.ProductRepository) *ProductService {
+	return &ProductService{productRepository: *productRepository}
 }
 
 func (s *ProductService) CreateProduct(ctx context.Context, createProductReq *request.CreateProductReq) (bool, error) {
