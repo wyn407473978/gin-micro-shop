@@ -13,5 +13,6 @@ func main() {
 	database := myConfig.Database
 
 	db := database.GetDB()
+	fmt.Println(db)
 
 }

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package  product.v1;
+
+option go_package = "api/proto/product/v1;productv1";
+
+message CreateProductRequest{
+  string name = 1;
+  double price = 2;
+  int64 stock = 3;
+}
+
+message CreateProductResponse{
+  bool success = 1;
+}
+
+
+message GetProductRequest{
+  int64 id = 1;
+}
+
+message GetProductResponse{
+  int64 id = 1;
+  string name = 2;
+  float  price = 3;
+  int64  stock = 4;
+}
+
+message ReduceStockRequest{
+  int64 id = 1;
+  int64 count = 2;
+}
+
+message ReduceStockResponse{
+  bool success = 1;
+}
+
+service ProductGrpcService{
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc ReduceStock(ReduceStockRequest) returns (ReduceStockResponse);
+}
+

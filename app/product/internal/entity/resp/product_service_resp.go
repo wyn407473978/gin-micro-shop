@@ -1,4 +1,4 @@
-package resp
+package response
 
 type GetProductByIdResp struct {
 	ID    int64   `json:"id"`

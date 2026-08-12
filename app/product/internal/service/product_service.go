@@ -16,16 +16,16 @@ func NewProductService(productRepository repository.ProductRepository) *ProductS
 	return &ProductService{productRepository: productRepository}
 }
 
-func (s *ProductService) CreateProduct(ctx context.Context, createProductReq *req.CreateProductReq) (bool, error) {
+func (s *ProductService) CreateProduct(ctx context.Context, createProductReq *request.CreateProductReq) (bool, error) {
 	var product = &model.Product{Name: createProductReq.Name, Price: createProductReq.Price, Stock: createProductReq.Stock}
 	return s.productRepository.CreateProduct(ctx, product)
 }
 
-func (s *ProductService) GetProductById(ctx context.Context, productId int64) (*resp.GetProductByIdResp, error) {
+func (s *ProductService) GetProductById(ctx context.Context, productId int64) (*response.GetProductByIdResp, error) {
 	product, err := s.productRepository.GetProduct(ctx, int(productId))
-	return &resp.GetProductByIdResp{ID: product.ID, Name: product.Name, Price: product.Price, Stock: product.Stock}, err
+	return &response.GetProductByIdResp{ID: product.ID, Name: product.Name, Price: product.Price, Stock: product.Stock}, err
 }
 
-func (s *ProductService) ReduceStock(ctx context.Context, id, count int) (bool, error) {
+func (s *ProductService) ReduceStock(ctx context.Context, id, count int64) (bool, error) {
 	return s.productRepository.ReduceStock(ctx, id, count)
 }
