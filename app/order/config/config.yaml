@@ -1,0 +1,9 @@
+grpc:
+  name: order-service-grpc
+  port: 50003
+database:
+  host: localhost
+  port: 55432
+  username: ai_user
+  password: ai_pass
+  database: micro_shop_user
