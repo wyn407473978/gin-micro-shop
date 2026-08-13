@@ -16,7 +16,7 @@ func NewProductRepository(db *gorm.DB) *ProductRepository {
 }
 
 func (pr *ProductRepository) CreateProduct(ctx context.Context, product *model.Product) (bool, error) {
-	product.UpdateTime = time.Now().Unix()
+	product.UpdateTime = time.Now()
 	tx := pr.db.Create(product)
 	return tx.Error == nil, tx.Error
 
