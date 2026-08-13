@@ -1,4 +1,4 @@
-package request
+package response
 
 type CreateProductReq struct {
 	Name  string  `json:"name"`
