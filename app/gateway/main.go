@@ -4,8 +4,11 @@ import (
 	orderv1 "gin-micro-shop/api/proto/order/v1"
 	productv1 "gin-micro-shop/api/proto/product/v1"
 	pb "gin-micro-shop/api/proto/user/v1"
+	"gin-micro-shop/pkg/etcd/discovery"
 	"gin-micro-shop/pkg/etcd/registry"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"log"
+	"net"
 	"time"
 
 	//productv1 "gin-micro-shop/api/proto/product/v1"
@@ -21,29 +24,29 @@ func main() {
 	config.InitConfig()
 	myConfig := config.GetConfig()
 	etcdConfig := myConfig.Etcd
-	conn, err := grpc.Dial("localhost:50001", grpc.WithInsecure())
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer conn.Close()
-	client := pb.NewUserServiceClient(conn)
+	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
+	serviceDiscovery := discovery.NewDiscovery(etcdClient)
+
+	err, userConnect := serviceDiscoveryMethod(serviceDiscovery, "user-service-grpc")
+	userClient := pb.NewUserServiceClient(userConnect)
+	defer userConnect.Close()
+
+	err, productConnect := serviceDiscoveryMethod(serviceDiscovery, "product-service-grpc")
+	productClient := productv1.NewProductGrpcServiceClient(productConnect)
+	defer productConnect.Close()
+
+	err, orderConnect := serviceDiscoveryMethod(serviceDiscovery, "order-service-grpc")
+	orderClient := orderv1.NewOrderGrpcServiceClient(orderConnect)
+	defer orderConnect.Close()
+
 	engine := gin.Default()
 
-	newClient, err := grpc.NewClient("localhost:50002", grpc.WithInsecure())
-	defer newClient.Close()
-	productClient := productv1.NewProductGrpcServiceClient(newClient)
-
-	orderClient, err := grpc.NewClient("localhost:50003", grpc.WithInsecure())
-	defer orderClient.Close()
-	orderGrpcService := orderv1.NewOrderGrpcServiceClient(orderClient)
-
-	router.RouterInit(engine, client, productClient, orderGrpcService)
+	router.RouterInit(engine, userClient, productClient, orderClient)
 	gatewayServer := myConfig.Server
 	serverPort := gatewayServer.Port
 	sprintf := fmt.Sprintf(":%d", serverPort)
 	fmt.Printf("server listening at %s\n", sprintf)
 
-	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
 	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
 	err = etcdRegistry.Register(&registry.ServiceInstance{Address: gatewayServer.IP, ID: gatewayServer.Name, Name: gatewayServer.Name, Port: gatewayServer.Port})
 	if err != nil {
@@ -56,4 +59,24 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func serviceDiscoveryMethod(serviceDiscovery *discovery.Discovery, name string) (error, *grpc.ClientConn) {
+	if err := serviceDiscovery.WatchService(name); err != nil {
+		log.Fatalf("watch user service failed: %v", err)
+	}
+	instances, err := serviceDiscovery.GetInstances(name)
+	if err != nil || len(instances) == 0 {
+		log.Fatal("no available service-grpc instance")
+	}
+
+	// 先用第一个实例；后续可改成轮询/随机负载均衡
+	userInstance := instances[0]
+	userAddr := net.JoinHostPort(userInstance.Address, fmt.Sprint(userInstance.Port))
+
+	userConnect, err := grpc.NewClient(userAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connect user service failed: %v", err)
+	}
+	return err, userConnect
 }

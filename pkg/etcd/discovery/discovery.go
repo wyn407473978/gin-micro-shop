@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	registry2 "gin-micro-shop/pkg/etcd/registry"
+	"log"
 	"strings"
 	"sync"
 
@@ -72,7 +73,7 @@ func (d *Discovery) updateServiceInstances(serviceName string, kvs []*mvccpb.Key
 func (d *Discovery) addInstance(serviceName string, instance *registry2.ServiceInstance) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-
+	log.Printf("service instance added: service=%s, id=%s", serviceName, instance.ID)
 	instances := d.serviceMap[serviceName]
 	for _, ins := range instances {
 		if ins.ID == instance.ID {
@@ -85,7 +86,7 @@ func (d *Discovery) addInstance(serviceName string, instance *registry2.ServiceI
 func (d *Discovery) removeInstance(serviceName, instanceID string) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-
+	log.Printf("service instance removed: service=%s, id=%s", serviceName, instanceID)
 	instances := d.serviceMap[serviceName]
 	for i, ins := range instances {
 		if ins.ID == instanceID {
