@@ -2,6 +2,7 @@ server:
   name: user-service
   port: 8081
 grpc:
+  ip: 127.0.0.1
   name: user-service-grpc
   port: 50001
 database:
@@ -10,3 +11,7 @@ database:
   username: ai_user
   password: ai_pass
   database: micro_shop_user
+etcd:
+  ip: 127.0.0.1
+  port: 2379
+  timeout: 10

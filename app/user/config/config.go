@@ -11,6 +11,7 @@ type Config struct {
 	Server   Server   `yaml:"server" mapstructure:"server"`
 	Database DataBase `yaml:"database" mapstructure:"database"`
 	UserGrpc UserGrpc `yaml:"grpc" mapstructure:"grpc"`
+	Etcd     Etcd     `yaml:"etcd" mapstructure:"etcd"`
 }
 
 func InitConfig() {
