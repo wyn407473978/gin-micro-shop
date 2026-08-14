@@ -10,6 +10,7 @@ var config Config
 type Config struct {
 	Database  DataBase  `yaml:"database" mapstructure:"database"`
 	OrderGrpc OrderGrpc `yaml:"grpc" mapstructure:"grpc"`
+	Etcd      Etcd      `yaml:"etcd" mapstructure:"etcd"`
 }
 
 func InitConfig() {

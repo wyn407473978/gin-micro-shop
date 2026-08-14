@@ -9,6 +9,7 @@ var config Config
 
 type Config struct {
 	Server Server `yaml:"server" mapstructure:"server"`
+	Etcd   Etcd   `yaml:"etcd" mapstructure:"etcd"`
 }
 
 func InitConfig() {

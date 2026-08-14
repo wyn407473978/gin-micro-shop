@@ -1,4 +1,5 @@
 grpc:
+  ip: 127.0.0.1
   name: product-service-grpc
   port: 50002
 database:
@@ -7,3 +8,7 @@ database:
   username: ai_user
   password: ai_pass
   database: micro_shop_user
+etcd:
+  ip: 127.0.0.1
+  port: 2379
+  timeout: 10

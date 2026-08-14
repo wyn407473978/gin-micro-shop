@@ -8,15 +8,20 @@ import (
 	"gin-micro-shop/app/order/config"
 	"gin-micro-shop/app/order/internal/repository"
 	impl2 "gin-micro-shop/app/order/internal/service/impl"
+	"gin-micro-shop/pkg/etcd/registry"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 func main() {
 
 	config.InitConfig()
 	myConfig := config.GetConfig()
+	etcdConfig := myConfig.Etcd
+
 	database := myConfig.Database
 	orderGrpc := myConfig.OrderGrpc
 	db := database.GetDB()
@@ -57,6 +62,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
+	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
+	err = etcdRegistry.Register(&registry.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
+	if err != nil {
+		fmt.Println("etcd注册失败", err)
+	}
+	fmt.Println("etcd注册成功")
+	defer etcdRegistry.Deregister()
+
 	err = server.Serve(lis)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)

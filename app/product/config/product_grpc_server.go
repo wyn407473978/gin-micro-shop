@@ -1,6 +1,7 @@
 package config
 
 type ProductGrpc struct {
-	Host string `yaml:"host" mapstructure:"host"`
+	IP   string `yaml:"ip" mapstructure:"ip"`
+	Name string `yaml:"name" mapstructure:"name"`
 	Port int    `yaml:"port" mapstructure:"port"`
 }
