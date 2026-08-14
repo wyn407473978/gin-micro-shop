@@ -2,6 +2,7 @@ package grpc_service
 
 import (
 	"context"
+	"fmt"
 	productv1 "gin-micro-shop/api/proto/product/v1"
 	request "gin-micro-shop/app/product/internal/entity/req"
 	"gin-micro-shop/app/product/internal/service"
@@ -28,6 +29,7 @@ func (s *ProductGrpcService) GetProduct(ctx context.Context, req *productv1.GetP
 	return &productv1.GetProductResponse{Id: getProductByIdResp.ID, Name: getProductByIdResp.Name, Price: float32(getProductByIdResp.Price), Stock: getProductByIdResp.Stock}, err
 }
 func (s *ProductGrpcService) ReduceStock(ctx context.Context, req *productv1.ReduceStockRequest) (*productv1.ReduceStockResponse, error) {
+	fmt.Println("ReduceStock", req.Id, req.Count)
 	stock, err := s.productService.ReduceStock(ctx, req.Id, req.Count)
 	return &productv1.ReduceStockResponse{Success: stock}, err
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	orderv1 "gin-micro-shop/api/proto/order/v1"
 	productv1 "gin-micro-shop/api/proto/product/v1"
 	pb "gin-micro-shop/api/proto/user/v1"
 	//productv1 "gin-micro-shop/api/proto/product/v1"
@@ -27,7 +28,11 @@ func main() {
 	defer newClient.Close()
 	productClient := productv1.NewProductGrpcServiceClient(newClient)
 
-	router.RouterInit(engine, client, productClient)
+	orderClient, err := grpc.NewClient("localhost:50003", grpc.WithInsecure())
+	defer orderClient.Close()
+	orderGrpcService := orderv1.NewOrderGrpcServiceClient(orderClient)
+
+	router.RouterInit(engine, client, productClient, orderGrpcService)
 	serverPort := myConfig.Server.Port
 	sprintf := fmt.Sprintf(":%d", serverPort)
 	fmt.Printf("server listening at %s\n", sprintf)

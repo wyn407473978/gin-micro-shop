@@ -27,6 +27,6 @@ func (pr *ProductRepository) GetProduct(ctx context.Context, id int) (product *m
 }
 
 func (pr *ProductRepository) ReduceStock(ctx context.Context, id, count int64) (bool, error) {
-	tx := pr.db.Where("id = ?", id).Update("stock", gorm.Expr("stock - ?", count))
+	tx := pr.db.Model(&model.Product{}).Where("id = ?", id).Update("stock", gorm.Expr("stock - ?", count))
 	return tx.Error == nil, tx.Error
 }

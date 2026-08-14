@@ -8,14 +8,14 @@ import (
 var config Config
 
 type Config struct {
-	Database    DataBase    `yaml:"database" mapstructure:"database"`
-	ProductGrpc ProductGrpc `yaml:"grpc" mapstructure:"grpc"`
+	Database  DataBase  `yaml:"database" mapstructure:"database"`
+	OrderGrpc OrderGrpc `yaml:"grpc" mapstructure:"grpc"`
 }
 
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("app/product/config")
+	viper.AddConfigPath("app/order/config")
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Println(err)

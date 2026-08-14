@@ -1,0 +1,32 @@
+syntax = "proto3";
+package order.v1;
+option go_package = "api/proto/order/v1;orderv1";
+// protoc --go_out=. --go-grpc_out=. api/proto/order/*.proto
+message GetOrderRequest{
+  int64 order_id = 1;
+}
+
+message GetOrderResponse{
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 product_id = 3;
+  double price = 4;
+  int64 count = 5;
+}
+
+message CreateOrderRequest{
+  int64 user_id = 1;
+  int64 product_id = 2;
+  int64 count = 3;
+}
+
+message CreateOrderResponse{
+  bool success = 1;
+}
+
+
+service OrderGrpcService{
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+}
+
