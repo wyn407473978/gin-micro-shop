@@ -8,6 +8,7 @@ import (
 	"gin-micro-shop/app/order/config"
 	"gin-micro-shop/app/order/internal/repository"
 	impl2 "gin-micro-shop/app/order/internal/service/impl"
+	"gin-micro-shop/pkg/etcd/discovery"
 	"gin-micro-shop/pkg/etcd/registry"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
@@ -25,26 +26,24 @@ func main() {
 	database := myConfig.Database
 	orderGrpc := myConfig.OrderGrpc
 	db := database.GetDB()
-
+	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
+	discoveryService := discovery.NewDiscovery(etcdClient)
 	//TODO 把用户服务和Product 注入进来给Service 使用
-
-	userConnect, err2 := grpc.NewClient("localhost:50001", grpc.WithInsecure())
+	err2, userConnect := serviceDiscoveryMethod(discoveryService, "user-service-grpc")
 	if err2 != nil {
 		log.Fatalf("did not connect: %v", err2)
 	}
 	userConnect.Connect()
-
 	userGrpcServiceClient := userv1.NewUserServiceClient(userConnect)
 	defer userConnect.Close()
 
 	userService := impl2.NewUserServiceImpl(userGrpcServiceClient)
 
-	productConnect, err2 := grpc.NewClient("localhost:50002", grpc.WithInsecure())
+	err2, productConnect := serviceDiscoveryMethod(discoveryService, "product-service-grpc")
 	if err2 != nil {
 		log.Fatalf("did not connect: %v", err2)
 	}
 	productConnect.Connect()
-
 	//其实注册到这里就可以进行远程调用了，之所以在封装一层是要将不需要的接口隔离开 只暴露需要的接口
 	productGrpcServiceClient := productv1.NewProductGrpcServiceClient(productConnect)
 	defer productConnect.Close()
@@ -63,7 +62,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
 	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
 	err = etcdRegistry.Register(&registry.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
 	if err != nil {
@@ -78,4 +76,24 @@ func main() {
 	}
 	defer lis.Close()
 
+}
+
+func serviceDiscoveryMethod(serviceDiscovery *discovery.Discovery, name string) (error, *grpc.ClientConn) {
+	if err := serviceDiscovery.WatchService(name); err != nil {
+		log.Fatalf("watch user service failed: %v", err)
+	}
+	instances, err := serviceDiscovery.GetInstances(name)
+	if err != nil || len(instances) == 0 {
+		log.Fatal("no available service-grpc instance")
+	}
+
+	// 先用第一个实例；后续可改成轮询/随机负载均衡
+	userInstance := instances[0]
+	userAddr := net.JoinHostPort(userInstance.Address, fmt.Sprint(userInstance.Port))
+
+	userConnect, err := grpc.NewClient(userAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connect user service failed: %v", err)
+	}
+	return err, userConnect
 }
