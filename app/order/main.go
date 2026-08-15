@@ -8,8 +8,7 @@ import (
 	"gin-micro-shop/app/order/config"
 	"gin-micro-shop/app/order/internal/repository"
 	impl2 "gin-micro-shop/app/order/internal/service/impl"
-	"gin-micro-shop/pkg/etcd/discovery"
-	"gin-micro-shop/pkg/etcd/registry"
+	"gin-micro-shop/pkg/etcd"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"log"
@@ -27,7 +26,7 @@ func main() {
 	orderGrpc := myConfig.OrderGrpc
 	db := database.GetDB()
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
-	discoveryService := discovery.NewDiscovery(etcdClient)
+	discoveryService := etcd.NewDiscovery(etcdClient)
 	//TODO 把用户服务和Product 注入进来给Service 使用
 	err2, userConnect := serviceDiscoveryMethod(discoveryService, "user-service-grpc")
 	if err2 != nil {
@@ -62,8 +61,8 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
-	err = etcdRegistry.Register(&registry.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
+	etcdRegistry := etcd.NewEtcdRegistry(etcdClient, 10)
+	err = etcdRegistry.Register(&etcd.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
 	if err != nil {
 		fmt.Println("etcd注册失败", err)
 	}
@@ -78,7 +77,7 @@ func main() {
 
 }
 
-func serviceDiscoveryMethod(serviceDiscovery *discovery.Discovery, name string) (error, *grpc.ClientConn) {
+func serviceDiscoveryMethod(serviceDiscovery *etcd.Discovery, name string) (error, *grpc.ClientConn) {
 	if err := serviceDiscovery.WatchService(name); err != nil {
 		log.Fatalf("watch user service failed: %v", err)
 	}

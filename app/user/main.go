@@ -7,7 +7,7 @@ import (
 	"gin-micro-shop/app/user/internal/grpc_service"
 	"gin-micro-shop/app/user/internal/repository"
 	"gin-micro-shop/app/user/internal/service"
-	"gin-micro-shop/pkg/etcd/registry"
+	"gin-micro-shop/pkg/etcd"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"net"
@@ -31,8 +31,8 @@ func main() {
 	grpcUserService := grpc_service.NewGrpcUserService(userService)
 
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
-	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
-	err := etcdRegistry.Register(&registry.ServiceInstance{Address: userGrpc.IP, ID: userGrpc.Name, Name: userGrpc.Name, Port: userGrpc.Port})
+	etcdRegistry := etcd.NewEtcdRegistry(etcdClient, 10)
+	err := etcdRegistry.Register(&etcd.ServiceInstance{Address: userGrpc.IP, ID: userGrpc.InstanceId, Name: userGrpc.Name, Port: userGrpc.Port})
 	if err != nil {
 		fmt.Println("etcd注册失败", err)
 	}

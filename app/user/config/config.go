@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var config Config
@@ -22,6 +23,15 @@ func InitConfig() {
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
+	}
+	if name := os.Getenv("USER_GRPC_NAME"); name != "" {
+		viper.Set("grpc.name", name)
+	}
+	if instanceID := os.Getenv("USER_GRPC_INSTANCE_ID"); instanceID != "" {
+		viper.Set("grpc.instance_id", instanceID)
+	}
+	if port := os.Getenv("USER_GRPC_PORT"); port != "" {
+		viper.Set("grpc.port", port)
 	}
 	err = viper.Unmarshal(&config)
 	fmt.Printf("%+v\n", config)

@@ -1,10 +1,9 @@
-package discovery
+package etcd
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
-	registry2 "gin-micro-shop/pkg/etcd/registry"
 	"log"
 	"strings"
 	"sync"
@@ -15,14 +14,14 @@ import (
 
 type Discovery struct {
 	client     *clientv3.Client
-	serviceMap map[string][]*registry2.ServiceInstance
+	serviceMap map[string][]*ServiceInstance
 	lock       sync.RWMutex
 }
 
 func NewDiscovery(client *clientv3.Client) *Discovery {
 	return &Discovery{
 		client:     client,
-		serviceMap: make(map[string][]*registry2.ServiceInstance),
+		serviceMap: make(map[string][]*ServiceInstance),
 	}
 }
 
@@ -59,7 +58,7 @@ func (d *Discovery) watch(prefix, serviceName string) {
 }
 
 func (d *Discovery) updateServiceInstances(serviceName string, kvs []*mvccpb.KeyValue) {
-	instances := make([]*registry2.ServiceInstance, 0, len(kvs))
+	instances := make([]*ServiceInstance, 0, len(kvs))
 	for _, kv := range kvs {
 		instance := parseInstance(kv)
 		instances = append(instances, instance)
@@ -70,7 +69,7 @@ func (d *Discovery) updateServiceInstances(serviceName string, kvs []*mvccpb.Key
 	d.lock.Unlock()
 }
 
-func (d *Discovery) addInstance(serviceName string, instance *registry2.ServiceInstance) {
+func (d *Discovery) addInstance(serviceName string, instance *ServiceInstance) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	log.Printf("service instance added: service=%s, id=%s", serviceName, instance.ID)
@@ -96,7 +95,7 @@ func (d *Discovery) removeInstance(serviceName, instanceID string) {
 	}
 }
 
-func (d *Discovery) GetInstances(serviceName string) ([]*registry2.ServiceInstance, error) {
+func (d *Discovery) GetInstances(serviceName string) ([]*ServiceInstance, error) {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
 
@@ -107,8 +106,9 @@ func (d *Discovery) GetInstances(serviceName string) ([]*registry2.ServiceInstan
 	return instances, nil
 }
 
-func parseInstance(kv *mvccpb.KeyValue) *registry2.ServiceInstance {
-	instance := &registry2.ServiceInstance{}
+// 解析实例
+func parseInstance(kv *mvccpb.KeyValue) *ServiceInstance {
+	instance := &ServiceInstance{}
 	json.Unmarshal(kv.Value, instance)
 	return instance
 }

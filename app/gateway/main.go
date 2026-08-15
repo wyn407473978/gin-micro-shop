@@ -4,8 +4,7 @@ import (
 	orderv1 "gin-micro-shop/api/proto/order/v1"
 	productv1 "gin-micro-shop/api/proto/product/v1"
 	pb "gin-micro-shop/api/proto/user/v1"
-	"gin-micro-shop/pkg/etcd/discovery"
-	"gin-micro-shop/pkg/etcd/registry"
+	"gin-micro-shop/pkg/etcd"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"net"
@@ -25,9 +24,20 @@ func main() {
 	myConfig := config.GetConfig()
 	etcdConfig := myConfig.Etcd
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
-	serviceDiscovery := discovery.NewDiscovery(etcdClient)
+	serviceDiscovery := etcd.NewDiscovery(etcdClient)
 
-	err, userConnect := serviceDiscoveryMethod(serviceDiscovery, "user-service-grpc")
+	builder := etcd.NewEtcdResolverBuilder(etcdClient, "/services")
+	//user-service-grpc-1 user-service-grpc-2 user-service-grpc-3
+	userConnect, err := grpc.NewClient(
+		"etcd:///user-service-grpc",
+		grpc.WithInsecure(),
+		grpc.WithResolvers(builder),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+	)
+	if err != nil {
+		log.Fatalf("connect user service failed: %v", err)
+	}
+	//err, userConnect := serviceDiscoveryMethod(serviceDiscovery, "user-service-grpc")
 	userClient := pb.NewUserServiceClient(userConnect)
 	defer userConnect.Close()
 
@@ -47,8 +57,8 @@ func main() {
 	sprintf := fmt.Sprintf(":%d", serverPort)
 	fmt.Printf("server listening at %s\n", sprintf)
 
-	etcdRegistry := registry.NewEtcdRegistry(etcdClient, 10)
-	err = etcdRegistry.Register(&registry.ServiceInstance{Address: gatewayServer.IP, ID: gatewayServer.Name, Name: gatewayServer.Name, Port: gatewayServer.Port})
+	etcdRegistry := etcd.NewEtcdRegistry(etcdClient, 10)
+	err = etcdRegistry.Register(&etcd.ServiceInstance{Address: gatewayServer.IP, ID: gatewayServer.Name, Name: gatewayServer.Name, Port: gatewayServer.Port})
 	if err != nil {
 		fmt.Println("etcd注册失败", err)
 	}
@@ -61,7 +71,7 @@ func main() {
 	}
 }
 
-func serviceDiscoveryMethod(serviceDiscovery *discovery.Discovery, name string) (error, *grpc.ClientConn) {
+func serviceDiscoveryMethod(serviceDiscovery *etcd.Discovery, name string) (error, *grpc.ClientConn) {
 	if err := serviceDiscovery.WatchService(name); err != nil {
 		log.Fatalf("watch user service failed: %v", err)
 	}
