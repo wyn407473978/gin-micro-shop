@@ -4,8 +4,8 @@ import (
 	orderv1 "gin-micro-shop/api/proto/order/v1"
 	productv1 "gin-micro-shop/api/proto/product/v1"
 	pb "gin-micro-shop/api/proto/user/v1"
-	"gin-micro-shop/pkg/etcd"
 	"gin-micro-shop/pkg/grpcx"
+	"gin-micro-shop/pkg/resolver"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"time"
@@ -25,7 +25,7 @@ func main() {
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
 	//serviceDiscovery := etcd.NewDiscovery(etcdClient)
 
-	builder := etcd.NewEtcdResolverBuilder(etcdClient, "/services")
+	builder := resolver.NewEtcdResolverBuilder(etcdClient, "/services")
 	userConnect, err := grpcx.NewClient("etcd:///user-service-grpc", "round_robin", builder)
 	if err != nil {
 		log.Fatalf("connect user service failed: %v", err)
@@ -49,14 +49,13 @@ func main() {
 	sprintf := fmt.Sprintf(":%d", serverPort)
 	fmt.Printf("server listening at %s\n", sprintf)
 
-	etcdRegistry := etcd.NewEtcdRegistry(etcdClient, 10)
-	err = etcdRegistry.Register(&etcd.ServiceInstance{Address: gatewayServer.IP, ID: gatewayServer.Name, Name: gatewayServer.Name, Port: gatewayServer.Port})
+	etcdRegistry := resolver.NewEtcdRegistry(etcdClient, 10)
+	err = etcdRegistry.Register(&resolver.ServiceInstance{Address: gatewayServer.IP, ID: gatewayServer.Name, Name: gatewayServer.Name, Port: gatewayServer.Port})
 	if err != nil {
 		fmt.Println("etcd注册失败", err)
 	}
 	fmt.Println("etcd注册成功")
 	defer etcdRegistry.Deregister()
-
 	err = engine.Run(sprintf)
 	if err != nil {
 		fmt.Println(err)

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	userv1 "gin-micro-shop/api/proto/user/v1"
 	userResponse "gin-micro-shop/app/gateway/response"
@@ -18,7 +17,7 @@ func (h *UserHandler) GetUser(gin *gin.Context) {
 	id := gin.Query("id")
 	userId, _ := strconv.Atoi(id)
 	fmt.Println(id)
-	user, err := h.UserServiceClient.GetUser(context.Background(), &userv1.GetUserRequest{Id: int64(userId)})
+	user, err := h.UserServiceClient.GetUser(gin.Request.Context(), &userv1.GetUserRequest{Id: int64(userId)})
 	fmt.Println("user:", user, "err:", err)
 	if err != nil {
 		response.ErrorWithCode(gin, 500, "requestId", "远程调用失败")

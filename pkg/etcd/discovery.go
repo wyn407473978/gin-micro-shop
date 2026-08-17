@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"gin-micro-shop/pkg/resolver"
 	"log"
 	"strings"
 	"sync"
@@ -14,14 +15,14 @@ import (
 
 type Discovery struct {
 	client     *clientv3.Client
-	serviceMap map[string][]*ServiceInstance
+	serviceMap map[string][]*resolver.ServiceInstance
 	lock       sync.RWMutex
 }
 
 func NewDiscovery(client *clientv3.Client) *Discovery {
 	return &Discovery{
 		client:     client,
-		serviceMap: make(map[string][]*ServiceInstance),
+		serviceMap: make(map[string][]*resolver.ServiceInstance),
 	}
 }
 
@@ -58,7 +59,7 @@ func (d *Discovery) watch(prefix, serviceName string) {
 }
 
 func (d *Discovery) updateServiceInstances(serviceName string, kvs []*mvccpb.KeyValue) {
-	instances := make([]*ServiceInstance, 0, len(kvs))
+	instances := make([]*resolver.ServiceInstance, 0, len(kvs))
 	for _, kv := range kvs {
 		instance := parseInstance(kv)
 		instances = append(instances, instance)
@@ -69,7 +70,7 @@ func (d *Discovery) updateServiceInstances(serviceName string, kvs []*mvccpb.Key
 	d.lock.Unlock()
 }
 
-func (d *Discovery) addInstance(serviceName string, instance *ServiceInstance) {
+func (d *Discovery) addInstance(serviceName string, instance *resolver.ServiceInstance) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	log.Printf("service instance added: service=%s, id=%s", serviceName, instance.ID)
@@ -95,7 +96,7 @@ func (d *Discovery) removeInstance(serviceName, instanceID string) {
 	}
 }
 
-func (d *Discovery) GetInstances(serviceName string) ([]*ServiceInstance, error) {
+func (d *Discovery) GetInstances(serviceName string) ([]*resolver.ServiceInstance, error) {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
 
@@ -107,8 +108,8 @@ func (d *Discovery) GetInstances(serviceName string) ([]*ServiceInstance, error)
 }
 
 // 解析实例
-func parseInstance(kv *mvccpb.KeyValue) *ServiceInstance {
-	instance := &ServiceInstance{}
+func parseInstance(kv *mvccpb.KeyValue) *resolver.ServiceInstance {
+	instance := &resolver.ServiceInstance{}
 	json.Unmarshal(kv.Value, instance)
 	return instance
 }

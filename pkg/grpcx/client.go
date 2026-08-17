@@ -1,7 +1,7 @@
 package grpcx
 
 import (
-	"gin-micro-shop/pkg/etcd"
+	"gin-micro-shop/pkg/resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"time"
@@ -22,12 +22,13 @@ type ClientConfig struct {
 	timeout time.Duration
 }
 
-func NewClient(target, round string, builder *etcd.EtcdResolverBuilder, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
+func NewClient(target, round string, builder *resolver.EtcdResolverBuilder, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
 	defaultOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(
 			insecure.NewCredentials(),
 		),
 		grpc.WithResolvers(builder),
+		grpc.WithChainUnaryInterceptor(LogClientInterceptor(), Timeout(10*time.Second)),
 	}
 
 	if round == "round_robin" {

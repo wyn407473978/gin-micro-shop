@@ -10,6 +10,7 @@ import (
 	impl2 "gin-micro-shop/app/order/internal/service/impl"
 	"gin-micro-shop/pkg/etcd"
 	"gin-micro-shop/pkg/grpcx"
+	"gin-micro-shop/pkg/resolver"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"log"
@@ -28,7 +29,7 @@ func main() {
 	db := database.GetDB()
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
 	//discoveryService := etcd.NewDiscovery(etcdClient)
-	builder := etcd.NewEtcdResolverBuilder(etcdClient, "/services")
+	builder := resolver.NewEtcdResolverBuilder(etcdClient, "/services")
 	userConnect, err2 := grpcx.NewClient("etcd:///user-service-grpc", "round_robin", builder)
 	if err2 != nil {
 		log.Fatalf("did not connect: %v", err2)
@@ -65,8 +66,8 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	etcdRegistry := etcd.NewEtcdRegistry(etcdClient, 10)
-	err = etcdRegistry.Register(&etcd.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
+	etcdRegistry := resolver.NewEtcdRegistry(etcdClient, 10)
+	err = etcdRegistry.Register(&resolver.ServiceInstance{Address: orderGrpc.IP, ID: orderGrpc.Name, Name: orderGrpc.Name, Port: orderGrpc.Port})
 	if err != nil {
 		fmt.Println("etcd注册失败", err)
 	}
