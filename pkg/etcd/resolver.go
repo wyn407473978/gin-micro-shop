@@ -68,6 +68,7 @@ type EtcdResolver struct {
 	cancel context.CancelFunc
 }
 
+// 获取制定前缀的相关服务,更新到state中去
 func (r *EtcdResolver) resolve() error {
 
 	prefix := fmt.Sprintf(
@@ -114,6 +115,7 @@ func (r *EtcdResolver) resolve() error {
 	)
 }
 
+// 监控制定服务的列表变化 如果有变化就调用resolve 接口重新获取完整服务列表
 func (r *EtcdResolver) watch() {
 
 	prefix := fmt.Sprintf(
