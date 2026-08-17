@@ -8,8 +8,8 @@ import (
 	"gin-micro-shop/app/product/internal/repository"
 	"gin-micro-shop/app/product/internal/service"
 	"gin-micro-shop/pkg/etcd"
+	"gin-micro-shop/pkg/grpcx"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
 	"log"
 	"net"
 	"time"
@@ -26,7 +26,7 @@ func main() {
 	db := database.GetDB()
 
 	productGrpc := myConfig.ProductGrpc
-	grpcServer := grpc.NewServer()
+	grpcServer := grpcx.NewServer(grpcx.ServerConfig{})
 	sprintf := fmt.Sprintf(":%d", productGrpc.Port)
 	listen, err := net.Listen("tcp", sprintf)
 	if err != nil {

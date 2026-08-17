@@ -9,6 +9,7 @@ import (
 	"gin-micro-shop/app/order/internal/repository"
 	impl2 "gin-micro-shop/app/order/internal/service/impl"
 	"gin-micro-shop/pkg/etcd"
+	"gin-micro-shop/pkg/grpcx"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"log"
@@ -26,9 +27,9 @@ func main() {
 	orderGrpc := myConfig.OrderGrpc
 	db := database.GetDB()
 	etcdClient, _ := clientv3.New(clientv3.Config{Endpoints: []string{etcdConfig.GetAddress()}, DialTimeout: 10 * time.Second})
-	discoveryService := etcd.NewDiscovery(etcdClient)
-	//TODO 把用户服务和Product 注入进来给Service 使用
-	err2, userConnect := serviceDiscoveryMethod(discoveryService, "user-service-grpc")
+	//discoveryService := etcd.NewDiscovery(etcdClient)
+	builder := etcd.NewEtcdResolverBuilder(etcdClient, "/services")
+	userConnect, err2 := grpcx.NewClient("etcd:///user-service-grpc", "round_robin", builder)
 	if err2 != nil {
 		log.Fatalf("did not connect: %v", err2)
 	}
@@ -38,7 +39,8 @@ func main() {
 
 	userService := impl2.NewUserServiceImpl(userGrpcServiceClient)
 
-	err2, productConnect := serviceDiscoveryMethod(discoveryService, "product-service-grpc")
+	//err2, productConnect := serviceDiscoveryMethod(discoveryService, "product-service-grpc")
+	productConnect, err2 := grpcx.NewClient("etcd:///product-service-grpc", "round_robin", builder)
 	if err2 != nil {
 		log.Fatalf("did not connect: %v", err2)
 	}
@@ -53,7 +55,9 @@ func main() {
 
 	orderGrpcService := impl2.NewOrderGrpcService(orderRepository, productService, userService)
 
-	server := grpc.NewServer()
+	server := grpcx.NewServer(
+		grpcx.ServerConfig{},
+	)
 	orderv1.RegisterOrderGrpcServiceServer(server, orderGrpcService)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", orderGrpc.Port))

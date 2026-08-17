@@ -6,6 +6,7 @@ import (
 	"fmt"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
+	"log"
 	"net"
 )
 
@@ -143,6 +144,7 @@ func (r *EtcdResolver) watch() {
 
 		// 发现服务发生变化
 		// 重新获取完整服务列表
+		log.Fatalf("service changed")
 		if err := r.resolve(); err != nil {
 			r.cc.ReportError(err)
 		}
