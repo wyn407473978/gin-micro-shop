@@ -24,19 +24,6 @@ func NewEtcdResolverBuilder(client *clientv3.Client, prefix string) *EtcdResolve
 	}
 }
 
-type EtcdResolver struct {
-	client *clientv3.Client
-
-	// gRPC 给我们的
-	cc resolver.ClientConn
-
-	serviceName string
-	prefix      string
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
 func (b *EtcdResolverBuilder) Scheme() string {
 	return Scheme
 }
@@ -67,6 +54,20 @@ func (b *EtcdResolverBuilder) Build(target resolver.Target, cc resolver.ClientCo
 
 	return r, nil
 }
+
+type EtcdResolver struct {
+	client *clientv3.Client
+
+	// gRPC 给我们的
+	cc resolver.ClientConn
+
+	serviceName string
+	prefix      string
+
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
 func (r *EtcdResolver) resolve() error {
 
 	prefix := fmt.Sprintf(
