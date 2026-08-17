@@ -6,6 +6,8 @@ import (
 	pb "gin-micro-shop/api/proto/user/v1"
 	"gin-micro-shop/app/gateway/response"
 	"gin-micro-shop/app/user/internal/service"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 )
 
@@ -20,7 +22,8 @@ func NewGrpcUserService(userService *service.UserService) *GrpcUserServiceImpl {
 func (s *GrpcUserServiceImpl) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.User, error) {
 	user, err := s.userService.FindUserByID(ctx, int(req.Id))
 	if err != nil {
-		return nil, fmt.Errorf("failed to find user: %w", err)
+		err := status.Error(codes.NotFound, "user not found")
+		return nil, err
 	}
 	return &pb.User{
 		Id:   int64(user.ID),

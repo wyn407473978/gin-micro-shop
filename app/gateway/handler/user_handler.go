@@ -20,7 +20,8 @@ func (h *UserHandler) GetUser(gin *gin.Context) {
 	user, err := h.UserServiceClient.GetUser(gin.Request.Context(), &userv1.GetUserRequest{Id: int64(userId)})
 	fmt.Println("user:", user, "err:", err)
 	if err != nil {
-		response.ErrorWithCode(gin, 500, "requestId", "远程调用失败")
+		fmt.Println("err:", err)
+		response.ErrorWithCode(gin, 500, "requestId", err.Error())
 		return
 	}
 	response.SuccessWithData(gin, user, "requestId")

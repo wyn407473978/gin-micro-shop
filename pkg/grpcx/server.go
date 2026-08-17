@@ -13,7 +13,7 @@ func NewServer(
 ) *grpc.Server {
 
 	defaultOpts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(LogServerInterceptor()),
+		grpc.ChainUnaryInterceptor(Recovery(), LogServerInterceptor()),
 	}
 
 	defaultOpts = append(
